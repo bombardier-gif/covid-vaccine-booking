@@ -19,7 +19,7 @@ def main():
         else:
             mobile = "your_mobile_number"
             token = generate_token_OTP(mobile, request_header)
-
+        request_header["Authorization"] = f"Bearer {token}"
         # Get Beneficiaries
         print("Fetching registered beneficiaries.. ")
         beneficiary_dtls = get_beneficiaries(request_header)
