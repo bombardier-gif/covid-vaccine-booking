@@ -164,7 +164,7 @@ def generate_captcha(request_header):
 
     if resp.status_code == 200:
         captcha_buider(resp.json())
-        beep(WARNING_BEEP_DURATION[0], WARNING_BEEP_DURATION[1])
+        beep(CAPTCHA_BEEP_DURATION[0], CAPTCHA_BEEP_DURATION[1])
         captcha = input('Enter Captcha: ')
         return captcha
 

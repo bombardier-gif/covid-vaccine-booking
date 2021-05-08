@@ -9,7 +9,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--token', help='Pass token directly')
     args = parser.parse_args()
-    beep(WARNING_BEEP_DURATION[0], WARNING_BEEP_DURATION[1])
     mobile = None
     try:
         base_request_header = {
