@@ -1,4 +1,3 @@
 requests
 tabulate
 inputimeout
-svglib
