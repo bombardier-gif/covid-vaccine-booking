@@ -9,7 +9,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--token', help='Pass token directly')
     args = parser.parse_args()
-    
+
     mobile = None
     try:
         base_request_header = {
