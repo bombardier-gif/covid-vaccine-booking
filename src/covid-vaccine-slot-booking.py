@@ -1,7 +1,7 @@
 import copy
 from collections import Counter
 import requests, sys, argparse, os, datetime
-from utils import generate_token_OTP, get_beneficiaries, check_and_book, get_districts, get_pincodes, beep, \
+from utils import CAPTCHA_BEEP_DURATION, generate_token_OTP, get_beneficiaries, check_and_book, get_districts, get_pincodes, beep, \
     BENEFICIARIES_URL, WARNING_BEEP_DURATION, get_vaccine_preference
 
 
@@ -9,7 +9,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--token', help='Pass token directly')
     args = parser.parse_args()
-
+    beep(WARNING_BEEP_DURATION[0], WARNING_BEEP_DURATION[1])
     mobile = None
     try:
         base_request_header = {

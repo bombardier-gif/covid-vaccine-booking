@@ -8,7 +8,8 @@ BENEFICIARIES_URL = "https://cdn-api.co-vin.in/api/v2/appointment/beneficiaries"
 CALENDAR_URL_DISTRICT = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id={0}&date={1}"
 CALENDAR_URL_PINCODE = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode={0}&date={1}"
 CAPTCHA_URL = "https://cdn-api.co-vin.in/api/v2/auth/getRecaptcha"
-WARNING_BEEP_DURATION = (1000, 2000)
+WARNING_BEEP_DURATION = (2000, 500)
+CAPTCHA_BEEP_DURATION = (1000, 4000)
 
 try:
     import winsound
@@ -16,11 +17,10 @@ try:
 except ImportError:
     import os
 
-    def beep(freq, duration):
-        try:
-            # apt-get install beep  --> install beep package on linux distros before running
-            os.system('beep -f %s -l %s' % (freq, duration))
-        except:
+    def beep(freq, duration):    
+        # apt-get install beep  --> install beep package on linux distros before running
+        result  = os.system('beep -f %s -l %s' % (freq, duration))
+        if result != 0:
             # brew install sox ---> For osX, install sox
             os.system('play -n synth %s sin %s' % (duration/1000, freq))
 
