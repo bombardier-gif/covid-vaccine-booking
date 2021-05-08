@@ -1,7 +1,7 @@
 import copy
 from collections import Counter
 import requests, sys, argparse, os, datetime
-from utils import CAPTCHA_BEEP_DURATION, generate_token_OTP, get_beneficiaries, check_and_book, get_districts, get_pincodes, beep, \
+from utils import generate_token_OTP, get_beneficiaries, check_and_book, get_districts, get_pincodes, beep, \
     BENEFICIARIES_URL, WARNING_BEEP_DURATION, get_vaccine_preference
 
 
