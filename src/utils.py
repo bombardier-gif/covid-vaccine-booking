@@ -1,11 +1,13 @@
 from hashlib import sha256
 from inputimeout import inputimeout, TimeoutOccurred
 import tabulate, copy, time, datetime, requests, sys, os, random
+from captcha import captcha_buider
 
 BOOKING_URL = "https://cdn-api.co-vin.in/api/v2/appointment/schedule"
 BENEFICIARIES_URL = "https://cdn-api.co-vin.in/api/v2/appointment/beneficiaries"
 CALENDAR_URL_DISTRICT = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id={0}&date={1}"
 CALENDAR_URL_PINCODE = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode={0}&date={1}"
+CAPTCHA_URL = "https://cdn-api.co-vin.in/api/v2/auth/getRecaptcha"
 WARNING_BEEP_DURATION = (1000, 2000)
 
 try:
@@ -15,8 +17,12 @@ except ImportError:
     import os
 
     def beep(freq, duration):
-        # apt-get install beep  --> install beep package on linux distros before running
-        os.system('beep -f %s -l %s' % (freq, duration))
+        try:
+            # apt-get install beep  --> install beep package on linux distros before running
+            os.system('beep -f %s -l %s' % (freq, duration))
+        except:
+            # brew install sox ---> For osX, install sox
+            os.system('play -n synth %s sin %s' % (duration/1000, freq))
 
 else:
     def beep(freq, duration):
@@ -151,6 +157,18 @@ def check_calendar_by_pincode(request_header, vaccine_type, location_dtls, start
         beep(WARNING_BEEP_DURATION[0], WARNING_BEEP_DURATION[1])
 
 
+def generate_captcha(request_header):
+    print('================================= GETTING CAPTCHA ==================================================')
+    resp = requests.post(CAPTCHA_URL, headers=request_header)
+    print(f'Booking Response Code: {resp.status_code}')
+
+    if resp.status_code == 200:
+        captcha_buider(resp.json())
+        beep(WARNING_BEEP_DURATION[0], WARNING_BEEP_DURATION[1])
+        captcha = input('Enter Captcha: ')
+        return captcha
+
+
 def book_appointment(request_header, details):
     """
     This function
@@ -159,25 +177,33 @@ def book_appointment(request_header, details):
         3. Returns True or False depending on Token Validity
     """
     try:
-        print('================================= ATTEMPTING BOOKING ==================================================')
+        while True:
+            captcha = generate_captcha(request_header)
+            details['captcha'] = captcha
 
-        resp = requests.post(BOOKING_URL, headers=request_header, json=details)
-        print(f'Booking Response Code: {resp.status_code}')
-        print(f'Booking Response : {resp.text}')
+            print('================================= ATTEMPTING BOOKING ==================================================')
 
-        if resp.status_code == 401:
-            print('TOKEN INVALID')
-            return False
+            resp = requests.post(BOOKING_URL, headers=request_header, json=details)
+            print(f'Booking Response Code: {resp.status_code}')
+            print(f'Booking Response : {resp.text}')
 
-        elif resp.status_code == 200:
-            beep(WARNING_BEEP_DURATION[0], WARNING_BEEP_DURATION[1])
-            print('##############    BOOKED!  ##############')
-            os.system("pause")
-            sys.exit()
-        else:
-            print(f'Response: {resp.status_code} : {resp.text}')
-            os.system("pause")
-            return True
+            if resp.status_code == 401:
+                print('TOKEN INVALID')
+                return False
+            
+            elif resp.status_code == 400:
+                print("Invalid captcha")
+                continue
+
+            elif resp.status_code == 200:
+                beep(WARNING_BEEP_DURATION[0], WARNING_BEEP_DURATION[1])
+                print('##############    BOOKED!  ##############')
+                os.system("pause")
+                sys.exit()
+            else:
+                print(f'Response: {resp.status_code} : {resp.text}')
+                os.system("pause")
+                return True
 
     except Exception as e:
         print(str(e))
