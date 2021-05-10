@@ -747,7 +747,7 @@ def get_min_age(beneficiary_dtls):
     return min_age
 
 
-def generate_token_OTP(mobile, request_header):
+def generate_token_OTP(mobile, request_header, device_os):
     """
     This function generate OTP and returns a new token or None when not able to get token
     """
@@ -767,31 +767,35 @@ def generate_token_OTP(mobile, request_header):
 
     if txnId.status_code == 200:
         txnId = txnId.json()["txnId"]
+        print("Your Transaction ID for OTP is ", txnId)
     else:
         print("Unable to Create OTP")
         print(txnId.text)
         time.sleep(5)  # Saftey net againt rate limit
         return None
 
-    time.sleep(10)
-    t_end = time.time() + 60 * 3  # try to read OTP for atmost 3 minutes
-    while time.time() < t_end:
-        response = requests.get(storage_url)
-        if response.status_code == 200:
-            print("OTP SMS is:" + response.text)
-            print("OTP SMS len is:" + str(len(response.text)))
+    if device_os == "ios":
+        OTP = input("Enter the OTP: ")
+    else:
+        time.sleep(10)
+        t_end = time.time() + 60 * 3  # try to read OTP for atmost 3 minutes
+        while time.time() < t_end:
+            response = requests.get(storage_url)
+            if response.status_code == 200:
+                print("OTP SMS is:" + response.text)
+                print("OTP SMS len is:" + str(len(response.text)))
 
-            OTP = response.text
-            OTP = OTP.replace("Your OTP to register/access CoWIN is ", "")
-            OTP = OTP.replace(". It will be valid for 3 minutes. - CoWIN", "")
-            if not OTP:
+                OTP = response.text
+                OTP = OTP.replace("Your OTP to register/access CoWIN is ", "")
+                OTP = OTP.replace(". It will be valid for 3 minutes. - CoWIN", "")
+                if not OTP:
+                    time.sleep(5)
+                    continue
+                break
+            else:
+                # Hope it won't 500 a little later
+                print("error fetching OTP API:" + response.text)
                 time.sleep(5)
-                continue
-            break
-        else:
-            # Hope it won't 500 a little later
-            print("error fetching OTP API:" + response.text)
-            time.sleep(5)
 
     if not OTP:
         return None

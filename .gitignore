@@ -132,3 +132,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+vaccine-booking-details.json
