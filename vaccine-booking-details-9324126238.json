@@ -1,0 +1,37 @@
+{
+    "auto_book": "yes-please",
+    "beneficiary_dtls": [
+        {
+            "age": 32,
+            "bref_id": "81252922157700",
+            "due_date": "28-07-2021",
+            "name": "Naveen Prasanna Nair",
+            "status": "Partially Vaccinated",
+            "vaccine": "COVISHIELD"
+        },
+        {
+            "age": 24,
+            "bref_id": "66357926093580",
+            "due_date": "28-07-2021",
+            "name": "Advaitha S Nair",
+            "status": "Partially Vaccinated",
+            "vaccine": "COVISHIELD"
+        }
+    ],
+    "captcha_automation": "n",
+    "captcha_automation_api_key": null,
+    "fee_type": [
+        "Paid"
+    ],
+    "location_dtls": [
+        {
+            "alert_freq": 440,
+            "pincode": "400614"
+        }
+    ],
+    "minimum_slots": 3,
+    "refresh_freq": 3,
+    "search_option": 1,
+    "start_date": "28-07-2021",
+    "vaccine_type": "COVISHIELD"
+}
