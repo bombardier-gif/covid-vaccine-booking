@@ -560,6 +560,7 @@ def check_and_book(
             for item in tmp_options:
                 item.pop("session_id", None)
                 item.pop("center_id", None)
+                item['vaccine type'] = vaccine_type 
                 cleaned_options_for_display.append(item)
 
             display_table(cleaned_options_for_display)
