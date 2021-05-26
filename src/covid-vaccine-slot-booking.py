@@ -9,6 +9,7 @@ import jwt
 from utils import generate_token_OTP, generate_token_OTP_manual, check_and_book, beep, BENEFICIARIES_URL, WARNING_BEEP_DURATION, \
     display_info_dict, save_user_info, collect_user_details, get_saved_user_info, confirm_and_proceed, get_dose_num, display_table, fetch_beneficiaries
 
+
 def is_token_valid(token):
     payload = jwt.decode(token, options={"verify_signature": False})
     remaining_seconds = payload['exp'] - int(time.time())
@@ -17,6 +18,7 @@ def is_token_valid(token):
     if remaining_seconds <= 60:
         print("Token is about to expire in next 1 min ...")
     return True
+
 
 def main():
     parser = argparse.ArgumentParser()

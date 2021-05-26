@@ -227,8 +227,6 @@ def collect_user_details(request_header):
         # Non vaccinated
         start_date = start_date_search()
 
-
-
     print(
         "\n================================= Location Info =================================\n"
     )
