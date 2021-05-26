@@ -66,7 +66,7 @@ def main():
             try_file = input("Would you like to see the details and confirm to proceed? (y/n Default y): ")
             try_file = try_file if try_file else 'y'
 
-            if try_file == 'y':
+            if try_file.lower() == 'y':
                 collected_details = get_saved_user_info(filename)
                 print("\n================================= Info =================================\n")
                 display_info_dict(collected_details)
@@ -157,7 +157,8 @@ def main():
                     fee_type=info.fee_type,
                     mobile=mobile,
                     captcha_automation=info.captcha_automation,
-                    dose_num=get_dose_num(collected_details)
+                    dose_num=get_dose_num(collected_details),
+                    excluded_pincodes=info.excluded_pincodes
                             )
             except Exception as e:
                 print(str(e))
