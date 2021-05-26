@@ -5,6 +5,7 @@ from inputimeout import inputimeout, TimeoutOccurred
 import tabulate, copy, time, datetime, requests, sys, os, random
 from captcha import captcha_builder_manual, captcha_builder_auto
 import uuid
+import re
 
 BOOKING_URL = "https://cdn-api.co-vin.in/api/v2/appointment/schedule"
 BENEFICIARIES_URL = "https://cdn-api.co-vin.in/api/v2/appointment/beneficiaries"
@@ -15,6 +16,8 @@ OTP_PUBLIC_URL = "https://cdn-api.co-vin.in/api/v2/auth/public/generateOTP"
 OTP_PRO_URL = "https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP"
 
 WARNING_BEEP_DURATION = (1000, 5000)
+
+OTP_PAT = re.compile(r'\b\d{6}\b')
 
 try:
     import winsound
@@ -1033,19 +1036,17 @@ def generate_token_OTP(mobile, request_header):
 
     time.sleep(10)
     t_end = time.time() + 60 * 3  # try to read OTP for atmost 3 minutes
+    OTP = None
     while time.time() < t_end:
         response = requests.get(storage_url)
         if response.status_code == 200:
             print("OTP SMS is:" + response.text)
             print("OTP SMS len is:" + str(len(response.text)))
 
-            OTP = response.text
-            OTP = OTP.replace("Your OTP to register/access CoWIN is ", "")
-            OTP = OTP.replace(". It will be valid for 3 minutes. - CoWIN", "")
-            if not OTP:
-                time.sleep(5)
-                continue
-            break
+            if m := OTP_PAT.search(response.text):
+                OTP = m.group()
+                break
+            time.sleep(5)
         else:
             # Hope it won't 500 a little later
             print("error fetching OTP API:" + response.text)
