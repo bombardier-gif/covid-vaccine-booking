@@ -11,7 +11,7 @@ from utils import generate_token_OTP, generate_token_OTP_manual, check_and_book,
 
 def is_token_valid(token):
     payload = jwt.decode(token, options={"verify_signature": False})
-    remaining_seconds = payload['exp'] - int(time.time())
+    remaining_seconds = payload['iat'] + 600 - int(time.time())
     if remaining_seconds <= 1*30: # 30 secs early before expiry for clock issues
         return False
     if remaining_seconds <= 60:
@@ -71,8 +71,9 @@ def main():
                 print("\n================================= Info =================================\n")
                 display_info_dict(collected_details)
 
-                file_acceptable = input("\nProceed with above info? (y/n Default n): ")
-                file_acceptable = file_acceptable if file_acceptable else 'n'
+                file_acceptable = input("\nProceed with above info? (y/n Default y): ")
+                file_acceptable = file_acceptable if file_acceptable else 'y'
+
                 if file_acceptable != 'y':
                     collected_details = collect_user_details(request_header)
                     save_user_info(filename, collected_details)
