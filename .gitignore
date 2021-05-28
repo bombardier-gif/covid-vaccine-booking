@@ -137,3 +137,6 @@ dmypy.json
 captcha.gif
 captcha.png 
 captcha.svg
+
+.github/
+.DS_Store

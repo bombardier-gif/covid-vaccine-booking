@@ -6,6 +6,7 @@ import time
 from types import SimpleNamespace
 import requests, sys, argparse, os, datetime
 import jwt
+from ratelimit import randomiseAgentToAvoidRateLimit
 from utils import generate_token_OTP, generate_token_OTP_manual, check_and_book, beep, BENEFICIARIES_URL, WARNING_BEEP_DURATION, \
     display_info_dict, save_user_info, collect_user_details, get_saved_user_info, confirm_and_proceed, get_dose_num, display_table, fetch_beneficiaries
 
@@ -34,7 +35,6 @@ def main():
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
             'origin': 'https://selfregistration.cowin.gov.in/',
             'referer': 'https://selfregistration.cowin.gov.in/'
-        
         }
 
         token = None
@@ -56,7 +56,7 @@ def main():
                 elif otp_pref=="y":
                     token = generate_token_OTP_manual(mobile, base_request_header)
 
-        request_header = copy.deepcopy(base_request_header)
+        request_header = copy.deepcopy(randomiseAgentToAvoidRateLimit())
         request_header["Authorization"] = f"Bearer {token}"
 
         if os.path.exists(filename):
@@ -120,7 +120,7 @@ def main():
 
         while True: # infinite-loop
             # create new request_header
-            request_header = copy.deepcopy(base_request_header)
+            request_header = copy.deepcopy(randomiseAgentToAvoidRateLimit())
             request_header["Authorization"] = f"Bearer {token}"
 
             # call function to check and book slots
