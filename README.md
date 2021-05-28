@@ -149,6 +149,13 @@
 
 <br>
 
+
+### Option 3: Google Messages via Chrome
+1. Install the Google Messages app from Google Play Store or from the app store
+2. Set it as the default messaging app, and when asked to scan the QR code, click on options -> Device Pairing and pair it with your computer
+3. Download the correct chromedriver file from https://chromedriver.chromium.org/downloads and place the file in the src folder
+4. You can check your chrome version by going to chrome://version on Chrome.
+
 ## Setup Guide for iOS
 
 ### Using Shortcuts app

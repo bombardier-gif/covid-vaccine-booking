@@ -6,8 +6,11 @@ import time
 from types import SimpleNamespace
 import requests, sys, argparse, os, datetime
 import jwt
+from messages_automate import getOTP
 from utils import generate_token_OTP, generate_token_OTP_manual, check_and_book, beep, BENEFICIARIES_URL, WARNING_BEEP_DURATION, \
     display_info_dict, save_user_info, collect_user_details, get_saved_user_info, confirm_and_proceed, get_dose_num, display_table, fetch_beneficiaries
+from selenium import webdriver
+
 
 def is_token_valid(token):
     payload = jwt.decode(token, options={"verify_signature": False})
@@ -47,12 +50,20 @@ def main():
             otp_pref = otp_pref if otp_pref else "n"
             while token is None:
                 if otp_pref=="n":
-                    try:
-                        token = generate_token_OTP(mobile, base_request_header)
-                    except Exception as e:
-                        print(str(e))
-                        print('OTP Retrying in 5 seconds')
-                        time.sleep(5)
+                    otp_automation_pref = input("\nDo you want to automate the OTP using  1.Google Messages via Chrome 2. Autoread app ? (Default 2):")
+                    if(otp_automation_pref == "1"):
+                        print("Please scan the QR code within 20 seconds.")
+                        messages_driver = webdriver.Chrome(executable_path=r'./src/chromedriver')
+                        messages_driver.get("https://messages.google.com/web/") 
+                        time.sleep(20)
+                        token = generate_token_OTP_manual(mobile, base_request_header,messages_driver)
+                    else:
+                        try:
+                            token = generate_token_OTP(mobile, base_request_header)
+                        except Exception as e:
+                            print(str(e))
+                            print('OTP Retrying in 5 seconds')
+                            time.sleep(5)
                 elif otp_pref=="y":
                     token = generate_token_OTP_manual(mobile, base_request_header)
 
