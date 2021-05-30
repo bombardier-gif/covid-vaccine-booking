@@ -27,9 +27,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mCoWinSmsBroadcastReceiver: CoWinSmsBroadcastReceiver
     private lateinit var mMainActivityReceiver: BroadcastReceiver
     private lateinit var mKvdbUrl: String
+    private lateinit var mPasswd: String
+
     private var mReceiverIsActive: Boolean = false
     private var mCurrentOTP: Int = 0
 
+    private lateinit var mPasswordEntry: EditText
+    private lateinit var mPasswordEntryKeyListener: KeyListener
     private lateinit var mPhoneNumberEntry: EditText
     private lateinit var mPhoneNumberEntryKeyListener: KeyListener
     private lateinit var mKvdbBucketkeyEntry: EditText
@@ -39,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mSharedPreferences : SharedPreferences
     private lateinit var mHandler: Handler
+    private lateinit var otpSenderOverWifi: OtpSenderOverWifi
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,6 +85,9 @@ class MainActivity : AppCompatActivity() {
         mSharedPreferences = getPreferences(MODE_PRIVATE)
 
         // initialize ui elements so we can use it later
+        mPasswordEntry = findViewById(R.id.PasswordEntry)
+        mPasswordEntryKeyListener = mPasswordEntry.keyListener
+
         mPhoneNumberEntry = findViewById(R.id.PhoneNumberEntry)
         mPhoneNumberEntryKeyListener = mPhoneNumberEntry.keyListener
 
@@ -130,6 +138,11 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("OTPDebug", "onDestroy() called")
+
+        if(mPasswd.isNotBlank()){
+            otpSenderOverWifi.close()
+        }
+
         // Remove all callbacks on the handler
         mHandler.removeCallbacksAndMessages(null)
         // Cancel any pending volley requests
@@ -189,6 +202,12 @@ class MainActivity : AppCompatActivity() {
         // mark receiver as active
         mReceiverIsActive = true
 
+        //set password if available
+        mPasswd = "${mPasswordEntry.text}"
+        if(mPasswd.isNotBlank()){
+            otpSenderOverWifi = OtpSenderOverWifi(10041)
+        }
+
         // set url for sending the cowin otp sms
         mKvdbUrl = "${resources.getString(R.string.kvdb_base_url)}/${mKvdbBucketkeyEntry.text}/${mPhoneNumberEntry.text}"
         mStatusTextView.text = getString(R.string.status_listening)
@@ -209,6 +228,10 @@ class MainActivity : AppCompatActivity() {
         // unregister broadcast receiver
         unregisterReceiver(mCoWinSmsBroadcastReceiver)
 
+        if(mPasswd.isNotBlank()){
+            otpSenderOverWifi.close()
+        }
+
         mStatusTextView.text = getString(R.string.status_stopped_listening)
         Toast.makeText(this, "CoWIN SMS Retriever has stopped", Toast.LENGTH_SHORT).show()
     }
@@ -218,6 +241,13 @@ class MainActivity : AppCompatActivity() {
             Log.d("OTPDebug", "New CoWIN OTP received.")
             Toast.makeText(this, getString(R.string.otp_received_toast, mKvdbUrl, sender), Toast.LENGTH_LONG).show()
         }
+
+        if(mPasswd.isNotBlank()){
+            Toast.makeText(this, "sending otp to laptop ...", Toast.LENGTH_LONG).show()
+            otpSenderOverWifi.sendOtpWithRetry(mPasswd, sms, 15);
+            return
+        }
+        
         // request a string response from the provided URL.
         val stringRequest = object : StringRequest(
             Method.PUT,
