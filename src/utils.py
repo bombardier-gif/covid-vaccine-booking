@@ -6,6 +6,7 @@ import tabulate, copy, time, datetime, requests, sys, os, random
 from captcha import captcha_builder_manual, captcha_builder_auto
 import uuid
 from ratelimit import handle_rate_limited
+import discoveryservice
 
 BOOKING_URL = "https://cdn-api.co-vin.in/api/v2/appointment/schedule"
 BENEFICIARIES_URL = "https://cdn-api.co-vin.in/api/v2/appointment/beneficiaries"
@@ -1008,70 +1009,30 @@ def get_min_age(beneficiary_dtls):
     return min_age
 
 
-def clear_bucket_and_send_OTP(storage_url, mobile, request_header):
-    print("clearing OTP bucket: " + storage_url)
-    response = requests.put(storage_url, data={})
+def request_for_new_otp(mobile, request_header):
     data = {
         "mobile": mobile,
         "secret": "U2FsdGVkX1+z/4Nr9nta+2DrVJSv7KS6VoQUSQ1ZXYDx/CJUkWxFYG6P3iM/VW+6jLQ9RDQVzp/RcZ8kbT41xw==",
     }
     print(f"Requesting OTP with mobile number {mobile}..")
-    txnId = requests.post(
-        url="https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP",
-        json=data,
-        headers=request_header,
-    )
+    txn_id = requests.post(url=OTP_PRO_URL, json=data, headers=request_header)
 
-    if txnId.status_code == 200:
-        txnId = txnId.json()["txnId"]
+    if txn_id.status_code == 200:
+        print(f"Successfully requested OTP for mobile number {mobile} at {datetime.datetime.today()}..")
+        txn_id = txn_id.json()["txnId"]
     else:
-        print("Unable to Create OTP")
-        print(txnId.text)
-        if txnId.status_code == 403 or txnId.status_code == 429:
+        print("Unable to Generate OTP")
+        print(txn_id.status_code, txn_id.text)
+        if txn_id.status_code == 403 or txn_id.status_code == 429:
             handle_rate_limited()
         time.sleep(5)  # Saftey net againt rate limit
-        txnId = None
+        txn_id = None
 
-    return txnId
+    return txn_id
 
 
-def generate_token_OTP(mobile, request_header):
-    """
-    This function generate OTP and returns a new token or None when not able to get token
-    """
-    storage_url = "https://kvdb.io/ASth4wnvVDPkg2bdjsiqMN/" + mobile
-
-    txnId = clear_bucket_and_send_OTP(storage_url, mobile, request_header)
-
-    if txnId is None:
-        return txnId
-
-    time.sleep(10)
-    t_end = time.time() + 60 * 3  # try to read OTP for atmost 3 minutes
-    while time.time() < t_end:
-        response = requests.get(storage_url)
-        if response.status_code == 200:
-            print("OTP SMS is:" + response.text)
-            print("OTP SMS len is:" + str(len(response.text)))
-
-            OTP = response.text
-            OTP = OTP.replace("Your OTP to register/access CoWIN is ", "")
-            OTP = OTP.replace(". It will be valid for 3 minutes. - CoWIN", "")
-            if not OTP:
-                time.sleep(5)
-                continue
-            break
-        else:
-            # Hope it won't 500 a little later
-            print("error fetching OTP API:" + response.text)
-            time.sleep(5)
-
-    if not OTP:
-        return None
-
-    print("Parsed OTP:" + OTP)
-
-    data = {"otp": sha256(str(OTP.strip()).encode("utf-8")).hexdigest(), "txnId": txnId}
+def validate_otp_generated(txn_id, otp, request_header):
+    data = {"otp": sha256(str(otp.strip()).encode("utf-8")).hexdigest(), "txnId": txn_id}
     print(f"Validating OTP..")
 
     token = requests.post(
@@ -1080,74 +1041,118 @@ def generate_token_OTP(mobile, request_header):
         headers=request_header,
     )
     if token.status_code == 200:
-        token = token.json()["token"]
+        token = token.json()['token']
+        print(f'Token Generated: {token}')
+        return token
     else:
         print("Unable to Validate OTP")
-        print(token.text)
+        print(token.status_code, token.text)
         return None
 
-    print(f"Token Generated: {token}")
-    return token
 
-
-def generate_token_OTP_manual(mobile, request_header):
-    """
-    This function generate OTP and returns a new token
-    """
-
+def generate_otp_token(mobile, request_header, max_retry, otp_fetcher, prompt_for_retry=False):
     if not mobile:
         print("Mobile number cannot be empty")
         os.system('pause')
         sys.exit()
 
+    token = None
     valid_token = False
-    while not valid_token:
-        try:
-            data = {"mobile": mobile,
-                    "secret": "U2FsdGVkX1+z/4Nr9nta+2DrVJSv7KS6VoQUSQ1ZXYDx/CJUkWxFYG6P3iM/VW+6jLQ9RDQVzp/RcZ8kbT41xw=="
-                    }
-            txnId = requests.post(url=OTP_PRO_URL, json=data, headers=request_header)
+    remaining_retry = max_retry
 
-            if txnId.status_code == 200:
-                print(f"Successfully requested OTP for mobile number {mobile} at {datetime.datetime.today()}..")
-                txnId = txnId.json()['txnId']
-
-                OTP = input("Enter OTP (If this takes more than 2 minutes, press Enter to retry): ")
-                if OTP:
-                    data = {"otp": sha256(str(OTP).encode('utf-8')).hexdigest(), "txnId": txnId}
-                    print(f"Validating OTP..")
-
-                    token = requests.post(url='https://cdn-api.co-vin.in/api/v2/auth/validateMobileOtp', json=data,
-                                          headers=request_header)
-                    if token.status_code == 200:
-                        token = token.json()['token']
-                        print(f'Token Generated: {token}')
-                        valid_token = True
-                        return token
-
-                    else:
-                        print('Unable to Validate OTP')
-                        print(f"Response: {token.text}")
-
-                        retry = input(f"Retry with {mobile} ? (y/n Default y): ")
-                        retry = retry if retry else 'y'
-                        if retry == 'y':
-                            pass
-                        else:
-                            sys.exit()
-
+    while not valid_token and remaining_retry > 0:
+        if remaining_retry != max_retry and prompt_for_retry:
+            retry = input(f"Retry with {mobile} ? (y/n Default y): ")
+            retry = retry if retry else 'y'
+            if retry == 'y':
+                pass
             else:
-                print('Unable to Generate OTP')
-                print(txnId.status_code, txnId.text)
-                if txnId.status_code == 403 or txnId.status_code == 429:
-                    handle_rate_limited()
+                sys.exit()
 
-                retry = input(f"Retry with {mobile} ? (y/n Default y): ")
-                retry = retry if retry else 'y'
-                if retry == 'y':
-                    pass
-                else:
-                    sys.exit()
+        remaining_retry = remaining_retry - 1
 
+        try:
+            new_otp_request_time = time.time()
+            txn_id = request_for_new_otp(mobile, request_header)
+            if txn_id is None:
+                continue
+
+            # wait for 5 seconds before fetching the otp
+            time.sleep(5)
+
+            otp = otp_fetcher(new_otp_request_time)
+            if otp is None:
+                continue
+
+            token = validate_otp_generated(txn_id, otp, request_header)
+            if token is None:
+                continue
+
+            return token
         except Exception as e:
             print(str(e))
+
+    print('Unable to fetch otp after all retries :(')
+    return token
+
+
+def clear_bucket(storage_url):
+    print("clearing OTP bucket: " + storage_url)
+    response = requests.put(storage_url, data={})
+
+
+def generate_token_OTP(mobile, request_header):
+    """
+    This function request a new OTP and fetches the otp from remote storage and returns a new token with 3 retries
+    """
+    storage_url = "https://kvdb.io/ASth4wnvVDPkg2bdjsiqMN/" + mobile
+    clear_bucket(storage_url)
+
+    def storage_otp_fetcher(otp_trigger_time):
+        otp = None
+        t_end = otp_trigger_time + 60 * 3  # try to read OTP for atmost 3 minutes
+        while time.time() < t_end:
+            response = requests.get(storage_url)
+            if response.status_code == 200:
+                print("OTP SMS is:" + response.text)
+                print("OTP SMS len is:" + str(len(response.text)))
+
+                otp = response.text
+                otp = otp.replace("Your OTP to register/access CoWIN is ", "")
+                otp = otp.replace(". It will be valid for 3 minutes. - CoWIN", "")
+                if not otp:
+                    time.sleep(5)
+                    continue
+                break
+            else:
+                # Hope it won't 500 a little later
+                print("error fetching OTP API:" + response.text)
+                time.sleep(5)
+        return otp
+
+    return generate_otp_token(mobile, request_header, 3, storage_otp_fetcher)
+
+
+def generate_token_OTP_manual(mobile, request_header):
+    """
+    This function request a new OTP and ask user to enter otp and returns a new token with 3 retries
+    """
+
+    def manual_otp_fetcher():
+        print("Enter OTP (If this takes more than 2 minutes, press Enter to retry): ")
+        while True:
+            otp = input('OTP : ')
+            if otp:
+                if len(otp) == 6:
+                    return otp
+                else:
+                    print('Invalid OTP. OTP should be of 6 digits')
+                    continue
+            else:
+                return None
+
+    return generate_otp_token(mobile, request_header, 3, manual_otp_fetcher, True)
+
+
+def generate_token_OTP_localwifi(mobile, request_header):
+    return generate_otp_token(mobile, request_header, 3, discoveryservice.get_otp, prompt_for_retry=False)

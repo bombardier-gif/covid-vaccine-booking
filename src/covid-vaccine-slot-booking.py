@@ -7,7 +7,9 @@ from types import SimpleNamespace
 import requests, sys, argparse, os, datetime
 import jwt
 from utils import generate_token_OTP, generate_token_OTP_manual, check_and_book, beep, BENEFICIARIES_URL, WARNING_BEEP_DURATION, \
-    display_info_dict, save_user_info, collect_user_details, get_saved_user_info, confirm_and_proceed, get_dose_num, display_table, fetch_beneficiaries
+    display_info_dict, save_user_info, collect_user_details, get_saved_user_info, confirm_and_proceed, get_dose_num, display_table, fetch_beneficiaries, generate_token_OTP_localwifi
+import otp_info
+import discoveryservice
 
 def is_token_valid(token):
     payload = jwt.decode(token, options={"verify_signature": False})
@@ -17,6 +19,30 @@ def is_token_valid(token):
     if remaining_seconds <= 60:
         print("Token is about to expire in next 1 min ...")
     return True
+
+
+def generate_token(otp_pref, mobile, base_request_header):
+    token = None
+    while token is None:
+        if otp_pref=="3":
+            try:
+                token = generate_token_OTP(mobile, base_request_header)
+            except Exception as e:
+                print(str(e))
+                print('OTP Retrying in 5 seconds')
+                time.sleep(5)
+        elif otp_pref=="2":
+            try:
+                token = generate_token_OTP_localwifi(mobile, base_request_header)
+            except Exception as e:
+                print(str(e))
+                print('OTP Retrying in 5 seconds')
+                time.sleep(5)
+        elif otp_pref=="1":
+            token = generate_token_OTP_manual(mobile, base_request_header)
+
+    return token
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -40,21 +66,23 @@ def main():
         token = None
         if args.token:
             token = args.token
+            otp_pref = "1"
         else:
             mobile = input("Enter the registered mobile number: ")
             filename = filename + mobile + ".json"
-            otp_pref = input("\nDo you want to enter OTP manually, instead of auto-read? \nRemember selecting n would require some setup described in README (y/n Default n): ")
-            otp_pref = otp_pref if otp_pref else "n"
-            while token is None:
-                if otp_pref=="n":
-                    try:
-                        token = generate_token_OTP(mobile, base_request_header)
-                    except Exception as e:
-                        print(str(e))
-                        print('OTP Retrying in 5 seconds')
-                        time.sleep(5)
-                elif otp_pref=="y":
-                    token = generate_token_OTP_manual(mobile, base_request_header)
+            otp_pref = input("\nPlease select from following option to enter OTP :-"
+                             "\n\t 1. Enter Otp manually"
+                             "\n\t 2. Auto read otp using local wifi ( Note this will work, "
+                             "only if your phone and laptop is connected with same wifi;  More secure because it will not send your otp on server )"
+                             "\n\t 3. Auto read otp using central db ( Works in all environment )"
+                             "\nPlease enter your choice, 2 and 3 would require some setup described in README (1,2,3 Default 1): ")
+            otp_pref = otp_pref if otp_pref else "1"
+
+            if otp_pref=="2":
+                passwd = input('Enter Unique Password (Same should be entered in Mobile App) :')
+                discoveryservice.start_receiving_otp(passwd)
+
+            token = generate_token(otp_pref, mobile, base_request_header)
 
         request_header = copy.deepcopy(base_request_header)
         request_header["Authorization"] = f"Bearer {token}"
@@ -129,22 +157,12 @@ def main():
 
                 # token is invalid ? 
                 # If yes, generate new one
-                if not token_valid: 
+                if not token_valid:
                     print('Token is INVALID.')
-                    token = None
-                    while token is None:
-                        if otp_pref=="n":
-                            try:
-                                token = generate_token_OTP(mobile, base_request_header)
-                            except Exception as e:
-                                print(str(e))
-                                print('OTP Retrying in 5 seconds')
-                                time.sleep(5)
-                        elif otp_pref=="y":
-                            token = generate_token_OTP_manual(mobile, base_request_header)
+                    token = generate_token(otp_pref, mobile, base_request_header)
 
                 check_and_book(
-                    request_header, 
+                    request_header,
                     info.beneficiary_dtls,
                     info.location_dtls,
                     info.pin_code_location_dtls,
