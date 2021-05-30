@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,18 +7,60 @@
     android:background="@color/atomic"
     tools:context=".MainActivity">
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/PasswordLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="248dp"
+            android:fontFamily="sans-serif"
+            android:text="@string/enter_password_used_while_script_run"
+            android:textColor="@color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.511"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <EditText
+        android:id="@+id/PasswordEntry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:autofillHints="AUTOFILL_HINT_PASSWORD"
+        android:ems="10"
+        android:labelFor="@id/PasswordEntry"
+        android:inputType="text"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/PasswordLabel" />
+
+    <TextView
+        android:id="@+id/VerticalSeparator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        android:text="@string/or_str"
+        android:textColor="@color/yellow"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/PasswordEntry"/>
+
     <TextView
         android:id="@+id/PhoneNumberLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="288dp"
         android:fontFamily="sans-serif"
         android:text="@string/enter_phone_number"
         android:textColor="@color/white"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="15dp"
         app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/VerticalSeparator"  />
 
     <EditText
         android:id="@+id/PhoneNumberEntry"
@@ -87,15 +129,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/KvdbBucketLabel" />
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="303dp"
-        android:layout_height="192dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/PhoneNumberLabel"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.437"
-        app:srcCompat="@drawable/ic_upload_image" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="303dp"
+            android:layout_height="192dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintBottom_toTopOf="@+id/PhoneNumberLabel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.121"
+            app:srcCompat="@drawable/ic_upload_image" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

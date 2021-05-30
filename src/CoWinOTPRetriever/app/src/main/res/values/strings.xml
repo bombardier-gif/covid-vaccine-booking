@@ -16,4 +16,6 @@
     <string name="generic_server_down">KVDB server is down</string>
     <string name="no_internet">No internet connection</string>
     <string name="generic_error">An unknown error occurred</string>
+    <string name="enter_password_used_while_script_run">Enter Password Used while script run</string>
+    <string name="or_str">Or,</string>
 </resources>
