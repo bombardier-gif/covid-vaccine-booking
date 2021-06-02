@@ -4,7 +4,7 @@
     <string name="start_listening_cowin_otp">Start Listening CoWIN OTP &#160;</string>
     <string name="kvdb_base_url">https://kvdb.io</string>
     <string name="enter_kvdb_bucket_key">Enter KV DB Bucket Key</string>
-    <string name="kvdb_default_key">ASth4wnvVDPkg2bdjsiqMN</string>
+    <string name="kvdb_default_key">J8Gxp4uiyTfWawwa2q7aNv</string>
     <string name="phone_number_id">0</string>
     <string name="kvdb_bucket_key_id">1</string>
     <string name="status_otp_received">CoWIN SMS Received. Sending..</string>
