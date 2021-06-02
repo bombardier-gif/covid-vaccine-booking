@@ -7,6 +7,8 @@ from captcha import captcha_builder_manual, captcha_builder_auto
 import uuid
 from ratelimit import handle_rate_limited
 
+from messages_automate import getOTP
+
 BOOKING_URL = "https://cdn-api.co-vin.in/api/v2/appointment/schedule"
 BENEFICIARIES_URL = "https://cdn-api.co-vin.in/api/v2/appointment/beneficiaries"
 CALENDAR_URL_DISTRICT = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id={0}&date={1}"
@@ -1099,7 +1101,7 @@ def generate_token_OTP(mobile, request_header):
     return token
 
 
-def generate_token_OTP_manual(mobile, request_header):
+def generate_token_OTP_manual(mobile, request_header, webdriver = None ):
     """
     This function generate OTP and returns a new token
     """
@@ -1120,8 +1122,11 @@ def generate_token_OTP_manual(mobile, request_header):
             if txnId.status_code == 200:
                 print(f"Successfully requested OTP for mobile number {mobile} at {datetime.datetime.today()}..")
                 txnId = txnId.json()['txnId']
-
-                OTP = input("Enter OTP (If this takes more than 2 minutes, press Enter to retry): ")
+                if(not webdriver):
+                    OTP = input("Enter OTP (If this takes more than 2 minutes, press Enter to retry): ")
+                else:
+                    time.sleep(10)
+                    OTP = getOTP(webdriver)
                 if OTP:
                     data = {"otp": sha256(str(OTP).encode('utf-8')).hexdigest(), "txnId": txnId}
                     print(f"Validating OTP..")
