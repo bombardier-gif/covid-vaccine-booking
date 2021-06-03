@@ -88,8 +88,9 @@ def main():
                              "\nPlease enter your choice, 2 and 3 would require some setup described in README (1,2,3 Default 1): ")
             otp_pref = otp_pref if otp_pref else "1"
 
+            kvdb_bucket = None
             if otp_pref=="2":
-                passwd = input('Enter Unique Password (Same should be entered in Mobile App) :')
+                passwd = input('Enter Unique Password (Same should be entered in Mobile App under "Enter Unique Password" section ) :')
                 discoveryservice.start_receiving_otp(passwd)
             elif otp_pref=="3":
                 kvdb_bucket = input("Please refer KVDB setup in ReadMe to setup your own KVDB bucket. Please enter your KVDB bucket value here: ")
