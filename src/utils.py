@@ -424,6 +424,8 @@ def check_calendar_by_pincode(
         4. Returns list of vaccination centers & slots if available
     """
     try:
+        request_header = copy.deepcopy(request_header)
+        del request_header["Authorization"]
         print(
             "==================================================================================="
         )
