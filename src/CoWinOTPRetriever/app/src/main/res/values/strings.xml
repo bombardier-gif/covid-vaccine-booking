@@ -23,4 +23,6 @@
     <string name="error_timeout">Connection timed out</string>
     <string name="error_unknown_with_status_code">An Unknown Error occurred with HTTP status %1$d</string>
     <string name="error_unknown">An Unknown Error occurred</string>
+    <string name="enter_password_used_while_script_run">Enter Unique Password to use Local Wifi</string>
+    <string name="or_str">Or,</string>
 </resources>
