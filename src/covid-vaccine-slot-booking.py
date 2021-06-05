@@ -10,7 +10,7 @@ from ratelimit import disable_re_assignment_feature
 from utils import generate_token_OTP, generate_token_OTP_manual, check_and_book, beep, WARNING_BEEP_DURATION, \
     display_info_dict, save_user_info, collect_user_details, get_saved_user_info, confirm_and_proceed, get_dose_num, display_table, fetch_beneficiaries
 
-KVDB_BUCKET = os.getenv('KVDB_BUCKET')
+KVDB_BUCKET = os.getenv('KVDB_BUCKET', 'C4wCymNTWGw5pAbe47we8u')
 
 
 def is_token_valid(token):
@@ -95,8 +95,8 @@ def main():
                 print("\n================================= Info =================================\n")
                 display_info_dict(collected_details)
 
-                file_acceptable = input("\nProceed with above info? (y/n Default y): ") if args.no_tty else 'y'
-                file_acceptable = file_acceptable if file_acceptable else 'y'
+                file_acceptable = input("\nProceed with above info? (y/n Default n): ") if args.no_tty else 'n'
+                file_acceptable = file_acceptable if file_acceptable else 'n'
 
                 if file_acceptable != 'y':
                     collected_details = collect_user_details(request_header)
