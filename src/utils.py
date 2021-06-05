@@ -15,6 +15,9 @@ FIND_URL_PINCODE = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/findBy
 CAPTCHA_URL = "https://cdn-api.co-vin.in/api/v2/auth/getRecaptcha"
 OTP_PUBLIC_URL = "https://cdn-api.co-vin.in/api/v2/auth/public/generateOTP"
 OTP_PRO_URL = "https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP"
+APPOINTMENT_SLIP_URL = (
+    "https://cdn-api.co-vin.in/api/v2/appointment/appointmentslip/download"
+)
 
 WARNING_BEEP_DURATION = (1000, 5000)
 
@@ -580,6 +583,21 @@ def book_appointment(request_header, details, mobile, generate_captcha_pref='n')
                 print(
                     "                        Hey, Hey, Hey! It's your lucky day!                       "
                 )
+                
+                try:
+                    appSlipBase = (
+                        APPOINTMENT_SLIP_URL
+                        + f"&appointment_id={resp.json()['appointment_id']}"
+                    )
+                    appslip = requests.get(appSlipBase, headers=request_header)
+                    with open(
+                        f"{resp.json()['appointment_id']}.pdf", "wb"
+                    ) as appSlipPdf:
+                        appSlipPdf.write(appslip.content)
+
+                except Exception as e:
+                    pass
+                
                 print("\nPress any key thrice to exit program.")
                 os.system("pause")
                 os.system("pause")
