@@ -364,15 +364,10 @@ def correct_schema(sessions):
 
 
 def filter_centers_by_age(resp, min_age_booking):
-    if min_age_booking >= 45:
-        center_age_filter = 45
-    else:
-        center_age_filter = 18
-
     if "centers" in resp:
         for center in list(resp["centers"]):
             for session in list(center["sessions"]):
-                if session['min_age_limit'] != center_age_filter:
+                if session['min_age_limit'] > min_age_booking:
                     center["sessions"].remove(session)
                     if (len(center["sessions"]) == 0):
                         resp["centers"].remove(center)
