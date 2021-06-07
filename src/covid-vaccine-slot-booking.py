@@ -8,7 +8,8 @@ import jwt
 
 from ratelimit import disable_re_assignment_feature
 from utils import generate_token_OTP, generate_token_OTP_manual, check_and_book, beep, WARNING_BEEP_DURATION, \
-    display_info_dict, save_user_info, collect_user_details, get_saved_user_info, confirm_and_proceed, get_dose_num, display_table, fetch_beneficiaries
+    display_info_dict, save_user_info, collect_user_details, get_saved_user_info, confirm_and_proceed,\
+    get_dose_num, display_table, fetch_beneficiaries, get_query_urls
 
 KVDB_BUCKET = os.getenv('KVDB_BUCKET')
 
@@ -178,6 +179,7 @@ def main():
                         elif otp_pref=="y":
                             token = generate_token_OTP_manual(mobile, base_request_header)
 
+                get_query_urls(info.refresh_freq)
                 check_and_book(
                     request_header,
                     info.beneficiary_dtls,

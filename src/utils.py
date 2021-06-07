@@ -9,16 +9,30 @@ from ratelimit import handle_rate_limited
 
 BOOKING_URL = "https://cdn-api.co-vin.in/api/v2/appointment/schedule"
 BENEFICIARIES_URL = "https://cdn-api.co-vin.in/api/v2/appointment/beneficiaries"
-CALENDAR_URL_DISTRICT = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id={0}&date={1}"
-CALENDAR_URL_PINCODE = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode={0}&date={1}"
-FIND_URL_DISTRICT = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/findByDistrict?district_id={0}&date={1}"
-FIND_URL_PINCODE = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/findByPin?pincode={0}&date={1}"
+
+CALENDAR_URL_DISTRICT_PRO = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id={0}&date={1}"
+CALENDAR_URL_PINCODE_PRO = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode={0}&date={1}"
+FIND_URL_DISTRICT_PRO = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/findByDistrict?district_id={0}&date={1}"
+FIND_URL_PINCODE_PRO = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/findByPin?pincode={0}&date={1}"
+
+CALENDAR_URL_DISTRICT_PUBLIC = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id={0}&date={1}"
+CALENDAR_URL_PINCODE_PUBLIC = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode={0}&date={1}"
+FIND_URL_DISTRICT_PUBLIC = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id={0}&date={1}"
+FIND_URL_PINCODE_PUBLIC = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={0}&date={1}"
+
 CAPTCHA_URL = "https://cdn-api.co-vin.in/api/v2/auth/getRecaptcha"
 OTP_PUBLIC_URL = "https://cdn-api.co-vin.in/api/v2/auth/public/generateOTP"
 OTP_PRO_URL = "https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP"
 SMS_REGEX = r"(?<!\d)\d{6}(?!\d)"
 
 WARNING_BEEP_DURATION = (1000, 5000)
+
+_RATELIMIT_SESSION = 20 # We are allowed 20 rate limits per session
+_SESSION_LENGTH = 600 # Assuming 10 minute long sessions
+
+_PROTECTED_FREQ = _SESSION_LENGTH / _RATELIMIT_SESSION
+_ELAPSED_SINCE_PROTECTED = _PROTECTED_FREQ + 1
+
 
 if os.getenv("BEEP") == "no":
     def beep(freq, duration):
@@ -146,6 +160,36 @@ def get_saved_user_info(filename):
     if "find_option" not in data:
         data['find_option'] = 1
     return data
+
+
+
+def get_query_urls(refresh_freq):
+
+    global CALENDAR_URL_DISTRICT
+    global CALENDAR_URL_PINCODE
+    global FIND_URL_DISTRICT
+    global FIND_URL_PINCODE
+    global _ELAPSED_SINCE_PROTECTED
+
+    if _ELAPSED_SINCE_PROTECTED >= _PROTECTED_FREQ:
+
+        CALENDAR_URL_DISTRICT = CALENDAR_URL_DISTRICT_PRO
+        CALENDAR_URL_PINCODE = CALENDAR_URL_PINCODE_PRO
+        FIND_URL_DISTRICT = FIND_URL_DISTRICT_PRO
+        FIND_URL_PINCODE = FIND_URL_PINCODE_PRO
+
+        _ELAPSED_SINCE_PROTECTED = refresh_freq
+
+    else :
+
+        CALENDAR_URL_DISTRICT = CALENDAR_URL_DISTRICT_PUBLIC
+        CALENDAR_URL_PINCODE = CALENDAR_URL_PINCODE_PUBLIC
+        FIND_URL_DISTRICT = FIND_URL_DISTRICT_PUBLIC
+        FIND_URL_PINCODE = FIND_URL_PINCODE_PUBLIC
+
+        _ELAPSED_SINCE_PROTECTED = _ELAPSED_SINCE_PROTECTED + refresh_freq
+
+
 
 
 def get_dose_num(collected_details):
@@ -633,6 +677,12 @@ def check_and_book(
     """
     slots_available = False
     try:
+
+        if CALENDAR_URL_PINCODE == CALENDAR_URL_PINCODE_PRO:
+            print('\nRefreshing using PRO URL')
+        else:
+            print('\nRefreshing using PUBLIC URL')
+
         min_age_booking = get_min_age(beneficiary_dtls)
 
         minimum_slots = kwargs["min_slots"]
