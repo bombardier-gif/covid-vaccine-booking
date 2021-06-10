@@ -1,4 +1,6 @@
 <h1 align="center"> Bombardier Fully Automated COVID-19 Vaccination Slot Booking Script</h1>
+<h1 align="center"> Compatible for Rescheduling appointment and Booking for Dose 2</h1>
+<h2 align="center"> Reschedule works for 1 beneficiary at a time</h2>
 
 <div align="center">
 
